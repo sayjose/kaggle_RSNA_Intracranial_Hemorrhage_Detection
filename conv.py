@@ -62,17 +62,19 @@ now = datetime.now().timestamp()
 model_path = './rsna_model/rsna_model_{}.pth'.format(now)
 
 dir_csv = './input'
-dir_train_img = './input/stage_1_train_images'
-dir_test_img = './input/stage_1_test_images'
+# dir_train_img = './input/stage_1_train_images'
+# dir_test_img = './input/stage_1_test_images'
+dir_train_png = './input/stage_1_train_images_png'
+dir_test_png = './input/stage_1_test_images_png'
 
 labels = ["any", "epidural", "intraparenchymal", "intraventricular", "subarachnoid", "subdural"]
 
 
 print('read train and test files...')
-train_total = tqdm(listdir(dir_train_img))
-test_total = tqdm(listdir(dir_test_img))
-train_files = [f for f in train_total if isfile(join(dir_train_img, f))]
-test_files = [f for f in test_total if isfile(join(dir_test_img, f))]
+train_total = tqdm(listdir(dir_train_png))
+test_total = tqdm(listdir(dir_test_png))
+train_files = [f for f in train_total if isfile(join(dir_train_png, f))]
+test_files = [f for f in test_total if isfile(join(dir_test_png, f))]
 print('complete read train and test files!')
 
 print('read csv...')
@@ -103,38 +105,6 @@ def _split_csv_to_train_nums(train_csv, i):
 def _split_csv_to_val_nums(test_csv, i):
     return test_csv[0:i*6]
 
-def _normalize(img):
-    if img.max() == img.min():
-        return np.zeros(img.shape)-1
-    return 2 * (img - img.min())/(img.max() - img.min()) - 1
-
-def _read(path, desired_size):
-    """Will be used in DataGenerator"""
-    
-    dcm = pydicom.dcmread(path)
-
-    slope, intercept = dcm.RescaleSlope, dcm.RescaleIntercept
-    
-    try:
-        img = (dcm.pixel_array * slope + intercept)
-    except:
-        img = np.zeros(desired_size[:2])-1
-    
-    if img.shape != desired_size[:2]:
-        img = cv2.resize(img, desired_size[:2], interpolation=cv2.INTER_LINEAR)
-    
-    img = _normalize(img)
-    
-    return np.stack((img,)*3, axis=-1)
-
-def _imshow(filename):
-    # print(filename)
-    ds = _read(dir_train_img+"/"+filename+".dcm")
-    plt.imshow(np.squeeze(ds))
-    plt.show()
-
-# img[:,:,np.newaxis]
-# ds = _read(dir_train_img+"/"+train_files[10])
 
 trn = _split_csv_to_train_nums(train_csv, test_nums)
 trn = _conv_raw_to_separation(trn)
@@ -178,16 +148,16 @@ class Dataset(data_utils.Dataset):
 
     def __getitem__(self, index):
         if self.typeIs is 'train':
-            ds = _read(dir_train_img+"/"+train_files[index],(224, 224))
+            img = plt.imread(dir_train_png+"/"+train_files[index])
         else:
-            ds = _read(dir_test_img+"/"+test_files[index],(224, 224))
-        img = torch.from_numpy(np.transpose(ds, (2,0,1))).float()
+            img = plt.imread(dir_test_png+"/"+train_files[index])
+        # img = torch.from_numpy(np.transpose(ds, (2,0,1))).float()
         label = self.y_data[index]
         return img, label
 
 #parameters
 learning_rate = 2e-5
-training_epochs = 10
+training_epochs = 100
 batch_size = 10
 n_classes = 6
 
