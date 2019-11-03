@@ -56,13 +56,18 @@ def _imshow(filename):
     plt.imshow(np.squeeze(ds))
     plt.show()
 
+ii = 0
 for img in tqdm(train_files):
+    if ii is 5:
+        break
     ds = _read(dir_train_img+"/"+img,(224, 224))
     img_name = img.split('.')[0]
-    plt.imsave(dir_train_png+"/"+img_name+".png", ds, cmap='Greys')
+    print(img_name)
+    plt.imsave("./"+img_name+".png", ds, cmap='Greys')
+    ii += 1
 
-for img in tqdm(test_files):
-    ds = _read(dir_train_img+"/"+img,(224, 224))
-    img_name = img.split('.')[0]
-    plt.imsave(dir_test_png+"/"+img_name+".png", ds, cmap='Greys')
+# for img in tqdm(test_files):
+#     ds = _read(dir_test_img+"/"+img,(224, 224))
+#     img_name = img.split('.')[0]
+#     plt.imsave(dir_test_png+"/"+img_name+".png", ds, cmap='Greys')
 

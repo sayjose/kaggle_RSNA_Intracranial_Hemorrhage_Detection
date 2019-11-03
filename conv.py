@@ -58,9 +58,6 @@ torch.manual_seed(777)
 if device == 'cuda':
     torch.cuda.manual_seed_all(777)
 
-now = datetime.now().timestamp()
-model_path = './rsna_model/rsna_model_{}.pth'.format(now)
-
 dir_csv = './input'
 # dir_train_img = './input/stage_1_train_images'
 # dir_test_img = './input/stage_1_test_images'
@@ -148,10 +145,10 @@ class Dataset(data_utils.Dataset):
 
     def __getitem__(self, index):
         if self.typeIs is 'train':
-            img = plt.imread(dir_train_png+"/"+train_files[index])
+            read_result = plt.imread(dir_train_png+"/"+train_files[index])[:,:,:3]
         else:
-            img = plt.imread(dir_test_png+"/"+train_files[index])
-        # img = torch.from_numpy(np.transpose(ds, (2,0,1))).float()
+            read_result = plt.imread(dir_test_png+"/"+train_files[index])[:,:,:3]
+        img = torch.from_numpy(np.transpose(read_result, (2,0,1))).float()
         label = self.y_data[index]
         return img, label
 
@@ -231,15 +228,17 @@ for epoch in range(training_epochs):
 
         avg_cost += cost / total_batch
         iter_num += batch_size
-        if iter_num % 100 == 0: # 매 100 iteration마다
-            summary.add_scalar('cost', cost.item(), iter_num)
-
+        # if iter_num % 100 == 0: # 매 100 iteration마다
+        #     summary.add_scalar('cost', cost.item(), iter_num)
+    
+    summary.add_scalar('cost', avg_cost, iter_num)
     print('[Epoch: {}] cost = {}'.format(epoch+1, avg_cost))
+    now = datetime.now().timestamp()
+    model_path = './rsna_model/rsna_model_{}.pth'.format(now)
+    torch.save(model, model_path)
+    print('Save Model!')
 
 print('Learning Finished!')
-
-torch.save(model, model_path)
-print('Save Model!')
 
 
 # Inference
